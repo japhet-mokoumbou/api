@@ -2,6 +2,7 @@ package com.teleconsultation.api.models;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // ✅ Import ajouté
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,24 +11,29 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "dossiers_medicaux")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // ✅ Annotation ajoutée
 public class DossierMedical {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id")
+    @JsonIgnoreProperties({"dossiersMedicaux", "rendezVous", "hibernateLazyInitializer", "handler"}) // ✅ Évite les cycles
     private Patient patient;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "medecin_id")
+    @JsonIgnoreProperties({"dossiersMedicaux", "rendezVous", "hibernateLazyInitializer", "handler"}) // ✅ Évite les cycles
     private Medecin medecin;
 
     @OneToMany(mappedBy = "dossierMedical", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"dossierMedical"}) // ✅ Évite les cycles avec Observation
     private List<Observation> observations = new ArrayList<>();
 
     @OneToMany(mappedBy = "dossierMedical", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"dossierMedical"}) // ✅ Évite les cycles avec ImageDICOM
     private List<ImageDICOM> imagesDICOM = new ArrayList<>();
 
     @CreationTimestamp

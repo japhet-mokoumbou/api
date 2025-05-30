@@ -82,4 +82,28 @@ public class DossierMedicalController {
         List<ImageDICOM> images = dossierMedicalService.getImagesByDossier(id);
         return ResponseEntity.ok(images);
     }
+
+    /**
+     * Crée ou récupère un dossier médical pour un patient donné
+     */
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('MEDECIN')")
+    public ResponseEntity<?> createOrGetDossier(@RequestBody Map<String, Long> request) {
+        try {
+            Long patientId = request.get("patientId");
+            Long medecinId = request.get("medecinId");
+            
+            if (patientId == null || medecinId == null) {
+                return ResponseEntity.badRequest().body("Patient ID et Medecin ID sont requis");
+            }
+            
+            DossierMedical dossier = dossierMedicalService.createOrGetDossier(patientId, medecinId);
+            return ResponseEntity.ok(dossier);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erreur lors de la création du dossier: " + e.getMessage());
+        }
+    }
+
+    
 }

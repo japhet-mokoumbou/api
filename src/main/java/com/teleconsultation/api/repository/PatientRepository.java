@@ -1,4 +1,3 @@
-// PatientRepository.java - Mise à jour
 package com.teleconsultation.api.repository;
 
 import com.teleconsultation.api.models.Patient;
@@ -27,4 +26,17 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     
     // Tous les patients validés et actifs
     List<Patient> findByCompteValideAndActifOrderByNomAsc(boolean compteValide, boolean actif);
+
+    // Méthode pour trouver les patients validés et actifs
+    List<Patient> findByCompteValideAndActif(boolean compteValide, boolean actif);
+    
+    // Méthode de recherche par nom, prénom ou email
+    @Query("SELECT p FROM Patient p WHERE p.compteValide = true AND p.actif = true AND " +
+           "(LOWER(p.nom) LIKE :query OR LOWER(p.prenom) LIKE :query OR LOWER(p.email) LIKE :query)")
+    List<Patient> findBySearchQuery(@Param("query") String query);
+
+    // NOUVELLE MÉTHODE: Patients sans dossier médical
+    @Query("SELECT p FROM Patient p WHERE p.compteValide = true AND p.actif = true AND " +
+           "p.id NOT IN (SELECT d.patient.id FROM DossierMedical d)")
+    List<Patient> findPatientsWithoutDossier();
 }

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "patients")
 public class Patient extends User {
@@ -20,9 +22,11 @@ public class Patient extends User {
 
     private String adresse;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
     private List<DossierMedical> dossiersMedicaux = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "patient")
     private List<RendezVous> rendezVous = new ArrayList<>();
 

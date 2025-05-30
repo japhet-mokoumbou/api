@@ -1,4 +1,3 @@
-// ObservationRepository.java
 package com.teleconsultation.api.repository;
 
 import com.teleconsultation.api.models.DossierMedical;

@@ -128,4 +128,5 @@ public class DossierMedicalService {
         DossierMedical dossier = findById(dossierId);
         return imageDICOMRepository.findByDossierMedicalOrderByDateUploadDesc(dossier);
     }
+    
 }

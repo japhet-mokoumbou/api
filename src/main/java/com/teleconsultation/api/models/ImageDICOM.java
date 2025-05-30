@@ -2,12 +2,14 @@ package com.teleconsultation.api.models;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // ✅ Import ajouté
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
 @Table(name = "images_dicom")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // ✅ Annotation ajoutée
 public class ImageDICOM {
 
     @Id
@@ -16,6 +18,7 @@ public class ImageDICOM {
 
     @ManyToOne
     @JoinColumn(name = "dossier_id")
+    @JsonIgnoreProperties({"observations", "imagesDICOM", "hibernateLazyInitializer", "handler"}) // ✅ Évite les cycles
     private DossierMedical dossierMedical;
 
     private String orthancId; // Identifiant de l'image sur le serveur Orthanc

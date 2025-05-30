@@ -1,18 +1,19 @@
 package com.teleconsultation.api.controllers;
 
+import com.teleconsultation.api.models.DossierMedical;
 import com.teleconsultation.api.models.Medecin;
 import com.teleconsultation.api.models.Patient;
 import com.teleconsultation.api.models.RendezVous;
+import com.teleconsultation.api.payload.request.CreateDossierRequest;
+import com.teleconsultation.api.payload.response.MessageResponse;
 import com.teleconsultation.api.repository.MedecinRepository;
 import com.teleconsultation.api.repository.PatientRepository;
 import com.teleconsultation.api.service.MedecinService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ public class MedecinController {
 
     @Autowired
     private MedecinRepository medecinRepository;
+    
+    // ===== ENDPOINTS EXISTANTS POUR LES RENDEZ-VOUS =====
     
     @GetMapping("/{medecinId}/rendez-vous/prochains")
     @PreAuthorize("hasRole('MEDECIN') and #medecinId == authentication.principal.id")
@@ -57,10 +60,59 @@ public class MedecinController {
         return ResponseEntity.ok(medecinRepository.findAll());
     }
 
-    // Supprimer ou corriger l'endpoint en double :
-    // @GetMapping("/medecin/patients")  // À supprimer
-@PreAuthorize("hasRole('MEDECIN')")
-public List<Patient> getAllPatients() {
-    return patientRepository.findAll();
-}
+    @GetMapping("/patients")
+    @PreAuthorize("hasRole('MEDECIN')")
+    public ResponseEntity<List<Patient>> getAllPatients() {
+        return ResponseEntity.ok(medecinService.getAllPatients());
+    }
+
+    // ===== NOUVEAUX ENDPOINTS POUR LES DOSSIERS MÉDICAUX =====
+    
+    /**
+     * Obtenir les dossiers médicaux d'un médecin
+     */
+    @GetMapping("/{medecinId}/dossiers")
+    @PreAuthorize("hasRole('MEDECIN') and #medecinId == authentication.principal.id")
+    public ResponseEntity<List<DossierMedical>> getDossiersMedicaux(@PathVariable Long medecinId) {
+        List<DossierMedical> dossiers = medecinService.findDossiersMedicaux(medecinId);
+        return ResponseEntity.ok(dossiers);
+    }
+    
+    /**
+     * Créer un dossier médical
+     */
+    @PostMapping("/{medecinId}/dossiers")
+    @PreAuthorize("hasRole('MEDECIN') and #medecinId == authentication.principal.id")
+    public ResponseEntity<?> creerDossierMedical(
+            @PathVariable Long medecinId,
+            @jakarta.validation.Valid @RequestBody CreateDossierRequest request) {
+        try {
+            DossierMedical dossier = medecinService.creerDossierPourPatient(medecinId, request.getPatientId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(dossier);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+    
+    /**
+     * Obtenir les patients sans dossier médical
+     */
+    @GetMapping("/{medecinId}/patients-sans-dossier")
+    @PreAuthorize("hasRole('MEDECIN') and #medecinId == authentication.principal.id")
+    public ResponseEntity<List<Patient>> getPatientsSansDossier(@PathVariable Long medecinId) {
+        List<Patient> patients = medecinService.findPatientsSansDossier();
+        return ResponseEntity.ok(patients);
+    }
+    
+    /**
+     * Rechercher des patients
+     */
+    @GetMapping("/{medecinId}/patients/search")
+    @PreAuthorize("hasRole('MEDECIN') and #medecinId == authentication.principal.id")
+    public ResponseEntity<List<Patient>> searchPatients(
+            @PathVariable Long medecinId,
+            @RequestParam(required = false) String query) {
+        List<Patient> patients = medecinService.searchPatients(query);
+        return ResponseEntity.ok(patients);
+    }
 }

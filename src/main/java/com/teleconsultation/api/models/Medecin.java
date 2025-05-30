@@ -3,6 +3,7 @@ package com.teleconsultation.api.models;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore; // ✅ Import ajouté
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +17,11 @@ public class Medecin extends User {
 
     private String numeroOrdre;
 
+    @JsonIgnore // ✅ Annotation ajoutée pour éviter les références circulaires
     @OneToMany(mappedBy = "medecin")
     private List<RendezVous> rendezVous = new ArrayList<>();
 
+    @JsonIgnore // ✅ Annotation ajoutée pour éviter les références circulaires
     @OneToMany(mappedBy = "medecin")
     private List<DossierMedical> dossiersMedicaux = new ArrayList<>();
 

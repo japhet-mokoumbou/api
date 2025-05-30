@@ -28,9 +28,7 @@ public class PatientController {
     @Autowired
     private PatientRepository patientRepository;
 
-    /**
-     * Crée un nouveau rendez-vous pour le patient connecté
-     */
+    // ===== VOS MÉTHODES EXISTANTES =====
 
     /**
      * Récupère tous les rendez-vous du patient connecté
@@ -45,13 +43,13 @@ public class PatientController {
     /**
      * Récupère le dossier médical du patient connecté
      */
-    @GetMapping("/{patientId}/dossier-medical")
+   /*  @GetMapping("/{patientId}/dossier-medical")
     @PreAuthorize("hasRole('PATIENT') and #patientId == authentication.principal.id")
     public ResponseEntity<DossierMedical> getDossierMedical(@PathVariable Long patientId) {
         Optional<DossierMedical> dossier = dossierMedicalService.findByPatientId(patientId);
         return dossier.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
+    } */
 
     /**
      * Récupère les informations du dossier médical (statistiques)
@@ -87,9 +85,46 @@ public class PatientController {
         return ResponseEntity.ok(stats);
     }
 
+    // ===== NOUVELLES MÉTHODES POUR LES MÉDECINS ET SECRÉTAIRES =====
+
+    /**
+     * Récupère tous les patients validés (pour médecins et secrétaires)
+     */
     @GetMapping("/patients")
-    @PreAuthorize("hasRole('SECRETAIRE')")
+    @PreAuthorize("hasAnyRole('MEDECIN', 'SECRETAIRE')")
     public ResponseEntity<List<Patient>> getAllPatients() {
-        return ResponseEntity.ok(patientRepository.findAll());
+        List<Patient> patients = patientRepository.findByCompteValideAndActif(true, true);
+        return ResponseEntity.ok(patients);
+    }
+
+    /**
+     * Recherche de patients par nom, prénom ou email (pour médecins et secrétaires)
+     */
+    @GetMapping("/patients/search")
+    @PreAuthorize("hasAnyRole('MEDECIN', 'SECRETAIRE')")
+    public ResponseEntity<List<Patient>> searchPatients(@RequestParam(required = false) String query) {
+        List<Patient> patients;
+        
+        if (query == null || query.trim().isEmpty()) {
+            // Si pas de requête, retourner tous les patients validés
+            patients = patientRepository.findByCompteValideAndActif(true, true);
+        } else {
+            // Rechercher par nom, prénom ou email
+            String searchQuery = "%" + query.toLowerCase().trim() + "%";
+            patients = patientRepository.findBySearchQuery(searchQuery);
+        }
+        
+        return ResponseEntity.ok(patients);
+    }
+
+    /**
+     * Récupère un patient par son ID (pour médecins et secrétaires)
+     */
+    @GetMapping("/patients/{patientId}")
+    @PreAuthorize("hasAnyRole('MEDECIN', 'SECRETAIRE')")
+    public ResponseEntity<Patient> getPatientById(@PathVariable Long patientId) {
+        Optional<Patient> patient = patientRepository.findById(patientId);
+        return patient.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
